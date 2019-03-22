@@ -1,9 +1,8 @@
 ---
-info:
+bot_info:
   name: download-fc-thread-bot
   nick: '@download_fc_thread_bot'
 fnames:
   cookies: cookies.txt
-  token: token.txt
   thread_html: threads/html/thread_page.html
   thread_image: threads/jpg/thread_page.png
