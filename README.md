@@ -17,3 +17,8 @@ A sequence like this should make it run:
 - `/start`     - display your `chat_id` for white/blacklisting purposes
 - `/help`      - commands help
 - `/get <url>` - fetch thread from FC and download it in html format
+
+# Feature backlog
+- Get all the thread pages
+- Validate URLs for `/get` command
+- User white-listing
