@@ -1,7 +1,10 @@
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler
+from firefox_cookies import get_cookie_jar
 from GrabzIt import GrabzItClient
 from GrabzIt import GrabzItImageOptions
+from telegram.ext import Updater, InlineQueryHandler, CommandHandler
+
 import http.cookiejar as cookielib
+import codecs
 import imgkit
 import logging
 import os
@@ -52,29 +55,18 @@ def as_image(source, output):
     grabzIt.FileToImage(source, options)
     grabzIt.SaveTo(output)  # (!) synchonous call to Grabzit API
 
-def get_with_requests(bot, update):
+def get(bot, update, args):
     """Use the python requests library to get the thread"""
     logger.info('/get issued by "%s" with text: "%s"', update.message.chat_id, update.message.text)
-    url = update.message.text.replace('/get ','')
 
-    #you can pass a LWPCookieJar directly to requests
     global gsettings
-    r = requests.get(url, cookies=load_cookies_from_lwp(gsettings['fnames']['cookies']))
-    with open(gsettings['fnames']['thread_html'], 'w') as f:
-        for line in r.text:
-            f.write(line)
-
-def get(bot, update):
-    logger.info('/get issued by "%s" with text: "%s"', update.message.chat_id, update.message.text)
-    url = update.message.text.replace('/get ','')
-    global gsettings
-    cookies_file = gsettings['fnames']['cookies']
     thread_html  = gsettings['fnames']['thread_html']
-    thread_image = gsettings['fnames']['thread_image']
-    cmd = "curl -s {0} --cookie {1} --cookie-jar {2} > {3}".format(url, cookies_file, cookies_file, thread_html)
-    p = subprocess.run(cmd, shell=True)
-    #as_image(thread_html, thread_image)
-    bot.send_document(chat_id=update.message.chat_id, document=open(thread_html, 'rb'))
+    cj = get_cookie_jar(gsettings['fnames']['cookies'])
+    for url in args:
+        response = requests.get(url, cookies=cj)
+        with codecs.open(gsettings['fnames']['thread_html'], 'w', 'ISO-8859-1') as f:
+            f.write(response.text)
+        bot.send_document(chat_id=update.message.chat_id, document=open(thread_html, 'rb'))
 
 def start(bot, update):
     logger.info('/start issued by "%s"', update.message.chat_id)
@@ -107,7 +99,7 @@ def main():
     # Register commmands
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("get", get))
+    dp.add_handler(CommandHandler("get", get, pass_args=True))
 
     # Start the bot
     updater.start_polling()

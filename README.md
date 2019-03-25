@@ -3,13 +3,13 @@
 A simple Telegram bot to download FC threads for people with no invite
 
 # Dependencies
-- virtualenv
+- virtualenv (self-contained environment)
 - wkhtmltopdf (optional for image format rendering)
 
 # Run the bot
 A sequence like this should make it run:
 - Check file names in `config.yml` file
-- Add cookies file
+- Add cookies DB file
 - `source  environment/bin/activate.fish`
 - `python run_bot.py`
 
@@ -22,3 +22,5 @@ A sequence like this should make it run:
 - Get all the thread pages
 - Validate URLs for `/get` command
 - User white-listing
+    - https://stackoverflow.com/a/41054788
+- Get specific thread pages

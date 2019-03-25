@@ -1,4 +1,10 @@
+*.pyc
+
+# Don't add server-side credentials
 bot_credentials.yml
-user_whitelist.yml
 cookies.txt
+cookies.sqlite
 token.txt
+
+# Don't add server-side whitelisted users
+user_whitelist.yml
