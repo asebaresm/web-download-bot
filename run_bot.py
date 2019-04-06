@@ -1,105 +1,57 @@
+from aux import load_yaml
 from firefox_cookies import get_cookie_jar
-from GrabzIt import GrabzItClient
-from GrabzIt import GrabzItImageOptions
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
-import http.cookiejar as cookielib
 import codecs
-import imgkit
 import logging
 import os
 import re
 import requests
 import subprocess
 import sys
-import yaml
 
-# Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
-gsettings = {}
-gcredentials = {}
+class DownloadBot(object):
+    def __init__(self,settings_name, credentials_name):
+        # Enable logging
+        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                            level=logging.INFO)
+        self.settings = load_yaml(settings_name)
+        self.credentials = load_yaml(credentials_name)
+        self.logger = logging.getLogger(__name__)
 
-# Funcs
-def save_cookies_lwp(cookiejar, filename):
-    lwp_cookiejar = cookielib.LWPCookieJar()
-    for c in cookiejar:
-        args = dict(vars(c).items())
-        args['rest'] = args['_rest']
-        del args['_rest']
-        c = cookielib.Cookie(**args)
-        lwp_cookiejar.set_cookie(c)
-    lwp_cookiejar.save(filename, ignore_discard=True)
+    # Bot commands
+    def get(self, bot, update, args):
+        """Use the python requests library to get the thread"""
+        self.logger.info('/get issued by "%s" with text: "%s"', update.message.chat_id, update.message.text)
 
-def load_cookies_from_lwp(filename):
-    # lwp_cookiejar = cookielib.LWPCookieJar()
-    # lwp_cookiejar.load(filename, ignore_discard=True)
-    lwp_cookiejar = cookielib.MozillaCookieJar(filename)
-    lwp_cookiejar.load()
-    return lwp_cookiejar
+        thread_html  = self.settings['fnames']['thread_html']
+        cj = get_cookie_jar(self.settings['fnames']['cookies'])
+        for url in args:
+            response = requests.get(url, cookies=cj)
+            print (response)
+            with codecs.open(self.settings['fnames']['thread_html'], 'w', 'ISO-8859-1') as f:
+                f.write(response.text)
+            bot.send_document(chat_id=update.message.chat_id, document=open(thread_html, 'rb'))
 
-# Using Grabzit propietary software but you can try with open source libsself.
-# I played for a while with this but everything good about it is behind a paywall
-def as_image(source, output):
-    global gcredentials
-    key = gcredentials['credentials']['grabzit_key']
-    secret = gcredentials['credentials']['grabzit_secret']
-    grabzIt = GrabzItClient.GrabzItClient(key, secret)
-    options = GrabzItImageOptions.GrabzItImageOptions()
-    options.browserHeight = -1
-    options.width = -1
-    options.height = -1
-    options.format = 'png'
-    options.quality = 100
-    grabzIt.FileToImage(source, options)
-    grabzIt.SaveTo(output)  # (!) synchonous call to Grabzit API
+    def start(self, bot, update):
+        self.logger.info('/start issued by "%s"', update.message.chat_id)
+        reply = "Hi there {0}".format(update.message.chat_id)
+        update.message.reply_text(reply)
 
-def get(bot, update, args):
-    """Use the python requests library to get the thread"""
-    logger.info('/get issued by "%s" with text: "%s"', update.message.chat_id, update.message.text)
-
-    global gsettings
-    thread_html  = gsettings['fnames']['thread_html']
-    cj = get_cookie_jar(gsettings['fnames']['cookies'])
-    for url in args:
-        response = requests.get(url, cookies=cj)
-        with codecs.open(gsettings['fnames']['thread_html'], 'w', 'ISO-8859-1') as f:
-            f.write(response.text)
-        bot.send_document(chat_id=update.message.chat_id, document=open(thread_html, 'rb'))
-
-def start(bot, update):
-    logger.info('/start issued by "%s"', update.message.chat_id)
-    reply = "Hi there {0}".format(update.message.chat_id)
-    update.message.reply_text(reply)
-
-def help(bot, update):
-    """Send a message when the command /help is issued."""
-    logger.info('/help issued by "%s"', update.message.chat_id)
-    update.message.reply_text('WIP: List of commands help goes here)')
-
-def load_config(fname):
-    with open(fname, "r") as f:
-        global gsettings
-        gsettings = yaml.safe_load(f)
-        return gsettings
-
-def load_credentials(fname):
-    with open(fname, "r") as f:
-        global gcredentials
-        gcredentials = yaml.safe_load(f)
-        return gcredentials
+    def help(self, bot, update):
+        """Send a message when the command /help is issued."""
+        self.logger.info('/help issued by "%s"', update.message.chat_id)
+        update.message.reply_text('WIP: List of commands help goes here)')
 
 def main():
-    settings = load_config('config.yml')
-    credentials = load_credentials('bot_credentials.yml')
-    updater = Updater(credentials['credentials']['token'])
+    fc_bot = DownloadBot('config.yml','bot_credentials.yml')
+    updater = Updater(fc_bot.credentials['credentials']['token'])
     dp = updater.dispatcher
 
     # Register commmands
-    dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("get", get, pass_args=True))
+    dp.add_handler(CommandHandler("help", fc_bot.help))
+    dp.add_handler(CommandHandler("start", fc_bot.start))
+    dp.add_handler(CommandHandler("get", fc_bot.get, pass_args=True))
 
     # Start the bot
     updater.start_polling()
