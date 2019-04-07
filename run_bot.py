@@ -27,7 +27,6 @@ class DownloadBot(object):
     def get(self, bot, update, args):
         """Use the python requests library to get the thread"""
         self.logger.info('/get issued by "%s" with text: "%s"', update.message.chat_id, update.message.text)
-
         thread_html  = self.settings['fnames']['thread_html']
         cj = get_cookie_jar(self.settings['fnames']['cookies'])
         if len(args) > self.max_urls:
@@ -41,12 +40,6 @@ class DownloadBot(object):
                 continue
             response = requests.get(url, cookies=cj)
             first, last = thread_pages_range(response.text, self.next_page_patt)
-            #if first == last:
-            #    out_file = self.settings['fnames']['thread_html'] + id + '.html'
-            #    with codecs.open(out_file, 'w', 'ISO-8859-1') as f:
-            #        f.write(response.text)
-            #    bot.send_document(chat_id=update.message.chat_id, document=open(out_file, 'rb'))
-            #    break
             for i in range(first, last + 1): #inclusive upper bound
                 clean_url_re = '(' + self.url_id_pattern + ')'
                 url_with_page = extract_one(url,clean_url_re) + self.next_page_arg + str(i)

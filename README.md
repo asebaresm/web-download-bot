@@ -1,10 +1,11 @@
-# FC no-invite bot
+# Webpage downloader no-account bot
 
-A simple Telegram bot to download FC threads for people with no invite
+A simple Telegram bot to download threads/webpages locked behind a private site
+that require an account. Just add a cookie!
 
 # Dependencies
 - virtualenv (self-contained environment)
-- wkhtmltopdf (optional for image format rendering)
+- wkhtmltopdf (experimental and very optional for downloading html as image)
 
 # Run the bot
 A sequence like this should make it run:
@@ -19,8 +20,8 @@ A sequence like this should make it run:
 - `/get <url>` - fetch thread from FC and download it in html format
 
 # Feature backlog
-- Get all the thread pages
-- Validate URLs for `/get` command
 - User white-listing
     - https://stackoverflow.com/a/41054788
-- Get specific thread pages
+- [done] Get all the thread pages
+- [done] Validate URLs for `/get` command
+- [done]Get specific thread pages

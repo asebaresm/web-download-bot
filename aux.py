@@ -10,6 +10,7 @@ def load_yaml(fname):
     with open(fname, "r") as f:
         return yaml.safe_load(f)
 
+# First approach at saving LWP cookies
 def save_cookies_lwp(cookiejar, filename):
     lwp_cookiejar = cookielib.LWPCookieJar()
     for c in cookiejar:
@@ -20,6 +21,7 @@ def save_cookies_lwp(cookiejar, filename):
         lwp_cookiejar.set_cookie(c)
     lwp_cookiejar.save(filename, ignore_discard=True)
 
+# First approach at loading LWP cookies
 def load_cookies_from_lwp(filename):
     # lwp_cookiejar = cookielib.LWPCookieJar()
     # lwp_cookiejar.load(filename, ignore_discard=True)
@@ -42,7 +44,7 @@ def as_image(source, output):
     grabzIt.FileToImage(source, options)
     grabzIt.SaveTo(output)  # (!) synchonous call to Grabzit API
 
-# Extract 1 field from the url as the url identifier
+# Extract 1 field from the argument pattern and string
 # A valid python regex is expected as pattern
 def extract_one(str, pattern):
     match = re.search(pattern,str)
@@ -50,19 +52,16 @@ def extract_one(str, pattern):
         return match.group(1)
     return None
 
+# Extract 2 fields from the argument pattern and string
 def extract_two(str, pattern):
     match = re.search(pattern,str)
     if match:
         return match.group(1), match.group(2)
     return None, None
 
+# Extract the current and max thread page range
 def thread_pages_range(thread, next_page_patt):
     current, max = extract_two(thread, next_page_patt)
     if current == None or max == None:
         return 1,1
     return int(current), int(max)
-    #if int(current) == int(max):
-    #    return None
-    #if int(current) < int(max):
-    #    next = int(current) + 1
-    #    return url + next_page_arg + str(next), next
