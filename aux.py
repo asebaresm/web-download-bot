@@ -3,6 +3,7 @@ from GrabzIt import GrabzItImageOptions
 
 import http.cookiejar as cookielib
 import imgkit
+import re
 import yaml
 
 def load_yaml(fname):
@@ -40,3 +41,28 @@ def as_image(source, output):
     options.quality = 100
     grabzIt.FileToImage(source, options)
     grabzIt.SaveTo(output)  # (!) synchonous call to Grabzit API
+
+# Extract 1 field from the url as the url identifier
+# A valid python regex is expected as pattern
+def extract_one(str, pattern):
+    match = re.search(pattern,str)
+    if match:
+        return match.group(1)
+    return None
+
+def extract_two(str, pattern):
+    match = re.search(pattern,str)
+    if match:
+        return match.group(1), match.group(2)
+    return None, None
+
+def thread_pages_range(thread, next_page_patt):
+    current, max = extract_two(thread, next_page_patt)
+    if current == None or max == None:
+        return 1,1
+    return int(current), int(max)
+    #if int(current) == int(max):
+    #    return None
+    #if int(current) < int(max):
+    #    next = int(current) + 1
+    #    return url + next_page_arg + str(next), next

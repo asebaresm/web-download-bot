@@ -4,5 +4,5 @@ bot_info:
   nick: '@download_fc_thread_bot'
 fnames:
   cookies: cookies.sqlite
-  thread_html: threads/html/thread_page.html
+  thread_html: threads/html/
   thread_image: threads/jpg/thread_page.png
