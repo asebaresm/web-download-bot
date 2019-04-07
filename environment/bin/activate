@@ -40,7 +40,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/home/asebares/Code/fc-no-invite-bot/environment"
+VIRTUAL_ENV="/home/asebares/Code/web-download-bot/environment"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

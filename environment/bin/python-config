@@ -1,4 +1,4 @@
-#!/home/asebares/Code/fc-no-invite-bot/environment/bin/python
+#!/home/asebares/Code/web-download-bot/environment/bin/python
 
 import sys
 import getopt
