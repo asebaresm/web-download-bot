@@ -1,5 +1,7 @@
 *.pyc
-environment/lib/python3.6/__pycache__/
+
+environment/
+!environment/.gitkeep
 
 # Don't add server-side credentials
 bot_credentials.yml
