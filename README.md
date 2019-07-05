@@ -22,6 +22,8 @@ A sequence like this should make it run:
 # Feature backlog
 - User white-listing
     - https://stackoverflow.com/a/41054788
-- [done] Get all the thread pages
-- [done] Validate URLs for `/get` command
-- [done]Get specific thread pages
+- Text replacer for sensitive info
+- Mobile URL support
+- :heavy_check_mark: Get all the thread pages
+- :heavy_check_mark: Validate URLs for `/get` command
+- :heavy_check_mark: Get specific thread pages
