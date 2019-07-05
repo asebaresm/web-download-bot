@@ -1,7 +1,7 @@
-from aux import load_yaml, extract_one, extract_two, thread_pages_range
 from firefox_cookies import get_cookie_jar
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
+import aux
 import codecs
 import logging
 import os
@@ -11,42 +11,49 @@ import subprocess
 import sys
 
 class DownloadBot(object):
-    def __init__(self,settings_name, credentials_name, max_urls, url_id_pattern, next_page_arg, next_page_patt):
+    def __init__(self,settings_name, credentials_name, max_urls, url_id_pattern, next_page_arg, next_page_patt, re_patterns):
         # Enable logging
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                             level=logging.INFO)
-        self.settings = load_yaml(settings_name)
-        self.credentials = load_yaml(credentials_name)
+        self.credentials = aux.load_yaml(credentials_name)
         self.logger = logging.getLogger(__name__)
         self.max_urls = max_urls
-        self.url_id_pattern = url_id_pattern
         self.next_page_arg = next_page_arg
         self.next_page_patt = next_page_patt
+        self.re_patterns = re_patterns
+        self.settings = aux.load_yaml(settings_name)
+        self.url_id_pattern = url_id_pattern
+        self.whitelist = self.credentials['users']['whitelist']
 
     # Bot commands
     def get(self, bot, update, args):
         """Use the python requests library to get the thread"""
         self.logger.info('/get issued by "%s" with text: "%s"', update.message.chat_id, update.message.text)
+        if not aux.valid_uid(update.message.from_user.id, self.whitelist):
+            reply = "User is not authorized, contact the bot dev https://github.com/asebaresm"
+            update.message.reply_text(reply)
+            return None
         thread_html  = self.settings['fnames']['thread_html']
         cj = get_cookie_jar(self.settings['fnames']['cookies'])
         if len(args) > self.max_urls:
             update.message.reply_text("Hey 1 url at a time if you don't mind.")
             return None
         for url in args:
-            id = extract_one(url, self.url_id_pattern)
+            id = aux.extract_one(url, self.url_id_pattern)
             if id is None:
                 bot_reply = "Not a valid url, give me something like `{0}`".format(self.url_id_pattern)
                 update.message.reply_text(bot_reply)
                 continue
             response = requests.get(url, cookies=cj)
-            first, last = thread_pages_range(response.text, self.next_page_patt)
+            first, last = aux.thread_pages_range(response.text, self.next_page_patt)
             for i in range(first, last + 1): #inclusive upper bound
                 clean_url_re = '(' + self.url_id_pattern + ')'
-                url_with_page = extract_one(url,clean_url_re) + self.next_page_arg + str(i)
+                url_with_page = aux.extract_one(url,clean_url_re) + self.next_page_arg + str(i)
                 response = requests.get(url_with_page, cookies=cj)
+                redacted = aux.redact_patterns(response.text, self.re_patterns)
                 out_file = self.settings['fnames']['thread_html'] + id + '_page' + str(i) + '.html'
                 with codecs.open(out_file, 'w', 'ISO-8859-1') as f:
-                    f.write(response.text)
+                    f.write(redacted)
                 bot.send_document(chat_id=update.message.chat_id, document=open(out_file, 'rb'))
 
     def start(self, bot, update):
@@ -60,10 +67,14 @@ class DownloadBot(object):
         update.message.reply_text('WIP: List of commands help goes here)')
 
 def main():
-    fc_pattern = 'https:\/\/www\.forocoches\.com.+?showthread.php\?t=(\d+)'
+    fc_pattern = 'https:\/\/(?:m|www)\.forocoches\.com.+?showthread.php\?t=(\d+)'
     fc_next_page_label = '&page='
     fc_next_page_patt = 'P&aacute;g (\d+) de (\d+)'
-    dw_bot = DownloadBot('config.yml','bot_credentials.yml', 1, fc_pattern, fc_next_page_label, fc_next_page_patt)
+    fc_redact = [
+                    'Hola, <a href="member\.php\?u=\d+">\w+<\/a>\.'
+                ]
+    dw_bot = DownloadBot('config.yml','bot_credentials.yml', 1,
+                         fc_pattern, fc_next_page_label, fc_next_page_patt, fc_redact)
     updater = Updater(dw_bot.credentials['credentials']['token'])
     dp = updater.dispatcher
 

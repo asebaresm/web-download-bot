@@ -52,6 +52,17 @@ def extract_one(str, pattern):
         return match.group(1)
     return None
 
+def redact_patterns(text, patterns):
+    redacted = text
+    for pattern in patterns:
+        redacted = re.sub(pattern, "", redacted)
+    return redacted
+
+def valid_uid(uid, whitelist):
+    if uid in whitelist:
+        return True
+    return False
+
 # Extract 2 fields from the argument pattern and string
 def extract_two(str, pattern):
     match = re.search(pattern,str)

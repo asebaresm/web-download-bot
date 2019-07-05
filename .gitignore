@@ -1,6 +1,6 @@
 *.pyc
 
-environment/
+environment/*
 !environment/.gitkeep
 
 # Don't add server-side credentials
