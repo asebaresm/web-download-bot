@@ -1,5 +1,5 @@
 GrabzIt==3.4.1
 imgkit==1.0.2
 python-telegram-bot==11.1.0
-PyYAML==3.12
+PyYAML==5.1
 requests==2.22.0
